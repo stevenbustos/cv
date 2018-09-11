@@ -23,8 +23,8 @@ Complete la tabla:
 
 | Ilusión | Categoria | Referencia | Tipo de interactividad (si aplica) | URL código base (si aplica) |
 |---------|-----------|------------|------------------------------------|-----------------------------|
-|         |           |            |                                    |                             |
-|         |           |            |                                    |                             |
+|Cafe-Wall Illusion|Psicológica - Geométrica|[Wikipedia](https://en.wikipedia.org/wiki/Caf%C3%A9_wall_illusion)|  |  |
+|Scintillating grid illusion|Psicológica - Geométrica|[Wikipedia](https://en.wikipedia.org/wiki/Grid_illusion)|  |  |
 |         |           |            |                                    |                             |
 |         |           |            |                                    |                             |
 |         |           |            |                                    |                             |

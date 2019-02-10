@@ -103,14 +103,14 @@ class Boid {
     acceleration.add(Vector.multiply(cohesion, 3));
     acceleration.add(Vector.multiply(separation, 1));
   }
-
+  
   void move() {
     velocity.add(acceleration); // add acceleration to velocity
     velocity.limit(maxSpeed); // make sure the velocity vector magnitude does not
     // exceed maxSpeed
     position.add(velocity); // add velocity to position
     frame.setPosition(position);
-    frame.setRotation(Quaternion.multiply(new Quaternion(new Vector(0, 1, 0), atan2(-velocity.z(), velocity.x())),
+    frame.setRotation(Quaternion.multiply(new Quaternion(new Vector(0, 1, 0), atan2(-velocity.z(), velocity.x())), 
       new Quaternion(new Vector(0, 0, 1), asin(velocity.y() / velocity.magnitude()))));
     acceleration.multiply(0); // reset acceleration
   }
@@ -131,53 +131,70 @@ class Boid {
   }
 
   void render() {
-      pushStyle();
+    pushStyle();
 
-      // uncomment to draw boid axes
-      //scene.drawAxes(10);
+    // uncomment to draw boid axes
+    //scene.drawAxes(10);
 
-      int kind = TRIANGLES;
-      strokeWeight(2);
-      stroke(color(0, 255, 0));
-      fill(color(255, 0, 0, 125));
+    int kind = TRIANGLES;
+    strokeWeight(2);
+    stroke(color(40, 255, 40));
+    fill(color(0, 255, 0, 125));
 
-      // visual modes
-      switch(mode) {
-      case 1:
-        noFill();
-        break;
-      case 2:
-        noStroke();
-        break;
-      case 3:
-        strokeWeight(3);
-        kind = POINTS;
-        break;
-      }
-
-      // highlight boids under the mouse
-      if (scene.trackedFrame("mouseMoved") == frame) {
-        stroke(color(0, 0, 255));
-        fill(color(0, 0, 255));
-      }
-
-      // highlight avatar
-      if (frame ==  avatar) {
-        stroke(color(255, 0, 0));
-        fill(color(255, 0, 0));
-      }
-
-      //draw boid
-      beginShape(kind);
-      if(representation){
-        VVertex vvertex = new VVertex(sc);
-        vvertex.draw();
-      }else{
-        FVertex fvertex = new FVertex(sc);
-        fvertex.draw();
-      }
-      endShape();
-
-      popStyle();
+    // visual modes
+    switch(mode) {
+    case 1:
+      noFill();
+      break;
+    case 2:
+      noStroke();
+      break;
+    case 3:
+      strokeWeight(3);
+      kind = POINTS;
+      break;
     }
+
+    // highlight boids under the mouse
+    if (scene.trackedFrame("mouseMoved") == frame) {
+      stroke(color(0, 0, 255));
+      fill(color(0, 0, 255));
+    }
+
+    // highlight avatar
+    if (frame ==  avatar) {
+      stroke(color(255, 0, 0));
+      fill(color(255, 0, 0));
+    }
+
+    //draw boid
+    beginShape(kind);
+    /*vertex(3 * sc, 0, 0);
+    vertex(-3 * sc, 2 * sc, 0);
+    vertex(-3 * sc, -2 * sc, 0);
+
+    vertex(3 * sc, 0, 0);
+    vertex(-3 * sc, 2 * sc, 0);
+    vertex(-3 * sc, 0, 2 * sc);
+
+    vertex(3 * sc, 0, 0);
+    vertex(-3 * sc, 0, 2 * sc);
+    vertex(-3 * sc, -2 * sc, 0);
+
+    vertex(-3 * sc, 0, 2 * sc);
+    vertex(-3 * sc, 2 * sc, 0);
+    vertex(-3 * sc, -2 * sc, 0); */
+    
+    if(representation){
+      VVertex vvertex = new VVertex(sc);
+      vvertex.draw();
+    }else{
+      FVertex fvertex = new FVertex(sc);
+      fvertex.draw();
+    }
+    
+    endShape();
+
+    popStyle();
   }
+}

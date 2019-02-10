@@ -27,11 +27,14 @@ import frames.core.*;
 import frames.processing.*;
 
 Scene scene;
+//flock bounding box
 int flockWidth = 1280;
 int flockHeight = 720;
 int flockDepth = 600;
 boolean avoidWalls = true;
+// Modo inmediato
 boolean immediate = true;
+// Representacion ( FV o VV )
 boolean representation = false;
 
 // visual modes
@@ -41,18 +44,16 @@ boolean representation = false;
 // 3. Only points
 int mode;
 
-int initBoidNum = 200; // amount of boids to start the program with
+int initBoidNum = 300; // amount of boids to start the program with
 ArrayList<Boid> flock;
 Frame avatar;
 boolean animate = true;
 
 void setup() {
-  size(1500, 1000, P3D);
+  size(1000, 800, P3D);
   scene = new Scene(this);
-  scene.setBoundingBox(new Vector(0, 0, 0), new Vector(flockWidth, flockHeight, flockDepth));
-  scene.setAnchor(scene.center());
-  scene.setFieldOfView(PI / 3);
-  scene.fitBall();
+  scene.setFrustum(new Vector(0, 0, 0), new Vector(flockWidth, flockHeight, flockDepth));
+  scene.fit();
   // create and fill the list of boids
   flock = new ArrayList();
   for (int i = 0; i < initBoidNum; i++)
@@ -65,18 +66,16 @@ void draw() {
   directionalLight(255, 255, 255, 0, 1, -100);
   walls();
   scene.traverse();
-  
-  pushStyle();
-  scene.beginScreenCoordinates();
+  // uncomment to asynchronously update boid avatar. See mouseClicked()
+  // updateAvatar(scene.trackedFrame("mouseClicked"));
+
   text((immediate?"Modo: Inmediato  ":"Modo: Retenido  ")+(representation?"  Vertex-Vertex  ":"  Face-Vertex  ")+("  FPS: "+frameRate) + ("  FrameCount: "+frameCount), 150, 35);
-  scene.endScreenCoordinates();
-  popStyle();
 }
 
 void walls() {
   pushStyle();
   noFill();
-  stroke(255);
+  stroke(255, 255, 0);
 
   line(0, 0, 0, 0, flockHeight, 0);
   line(0, 0, flockDepth, 0, flockHeight, flockDepth);
@@ -95,6 +94,72 @@ void walls() {
   popStyle();
 }
 
+void updateAvatar(Frame frame) {
+  if (frame != avatar) {
+    avatar = frame;
+    if (avatar != null)
+      thirdPerson();
+    else if (scene.eye().reference() != null)
+      resetEye();
+  }
+}
+
+// Sets current avatar as the eye reference and interpolate the eye to it
+void thirdPerson() {
+  scene.eye().setReference(avatar);
+  scene.fit(avatar, 1);
+}
+
+// Resets the eye
+void resetEye() {
+  // same as: scene.eye().setReference(null);
+  scene.eye().resetReference();
+  scene.lookAt(scene.center());
+  scene.fit(1);
+}
+
+// picks up a boid avatar, may be null
+void mouseClicked() {
+  // two options to update the boid avatar:
+  // 1. Synchronously
+  updateAvatar(scene.track("mouseClicked", mouseX, mouseY));
+  // which is the same as these two lines:
+  // scene.track("mouseClicked", mouseX, mouseY);
+  // updateAvatar(scene.trackedFrame("mouseClicked"));
+  // 2. Asynchronously
+  // which requires updateAvatar(scene.trackedFrame("mouseClicked")) to be called within draw()
+  // scene.cast("mouseClicked", mouseX, mouseY);
+}
+
+// 'first-person' interaction
+void mouseDragged() {
+  if (scene.eye().reference() == null)
+    if (mouseButton == LEFT)
+      // same as: scene.spin(scene.eye());
+      scene.spin();
+    else if (mouseButton == RIGHT)
+      // same as: scene.translate(scene.eye());
+      scene.translate();
+    else
+      scene.moveForward(mouseX - pmouseX);
+}
+
+// highlighting and 'third-person' interaction
+void mouseMoved(MouseEvent event) {
+  // 1. highlighting
+  scene.cast("mouseMoved", mouseX, mouseY);
+  // 2. third-person interaction
+  if (scene.eye().reference() != null)
+    // press shift to move the mouse without looking around
+    if (!event.isShiftDown())
+      scene.lookAround();
+}
+
+void mouseWheel(MouseEvent event) {
+  // same as: scene.scale(event.getCount() * 20, scene.eye());
+  scene.scale(event.getCount() * 20);
+}
+
 void keyPressed() {
   switch (key) {
   case 'a':
@@ -102,7 +167,7 @@ void keyPressed() {
     break;
   case 's':
     if (scene.eye().reference() == null)
-      scene.fitBallInterpolation();
+      scene.fit(1);
     break;
   case 't':
     scene.shiftTimers();
@@ -113,12 +178,14 @@ void keyPressed() {
   case 'v':
     avoidWalls = !avoidWalls;
     break;
+  // Cambiar de inmediato a retenido  
   case 'r':
     immediate = !immediate;
     break;
   case 'i':
     immediate = true;
     break;
+  // Cambiar representacion
   case 'f':
     representation = !representation;
     break;
@@ -126,14 +193,10 @@ void keyPressed() {
     mode = mode < 3 ? mode+1 : 0;
     break;
   case ' ':
-    if (scene.eye().reference() != null) {
-      scene.lookAt(scene.center());
-      scene.fitBallInterpolation();
-      scene.eye().setReference(null);
-    } else if (avatar != null) {
-      scene.eye().setReference(avatar);
-      scene.interpolateTo(avatar);
-    }
+    if (scene.eye().reference() != null)
+      resetEye();
+    else if (avatar != null)
+      thirdPerson();
     break;
   }
 }

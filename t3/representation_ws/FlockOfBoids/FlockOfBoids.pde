@@ -49,6 +49,11 @@ ArrayList<Boid> flock;
 Frame avatar;
 boolean animate = true;
 
+// For the curves
+Interpolator interpolator;
+ArrayList<Vector> points;
+int curveMode = 0;
+
 void setup() {
   size(1000, 800, P3D);
   scene = new Scene(this);
@@ -58,6 +63,14 @@ void setup() {
   flock = new ArrayList();
   for (int i = 0; i < initBoidNum; i++)
     flock.add(new Boid(new Vector(flockWidth / 2, flockHeight / 2, flockDepth / 2)));
+    
+  // Point 3
+  interpolator = new Interpolator(scene, new Frame());
+  for (int i = 0; i < initBoidNum; i++) {
+    Frame ctrlPoint = new Frame(scene);
+    ctrlPoint.setPosition(flock.get(i).position);
+    interpolator.addKeyFrame(ctrlPoint);
+  }
 }
 
 void draw() {
@@ -68,8 +81,31 @@ void draw() {
   scene.traverse();
   // uncomment to asynchronously update boid avatar. See mouseClicked()
   // updateAvatar(scene.trackedFrame("mouseClicked"));
-
+  
+  points = new ArrayList<Vector>();
+  for(Frame frame : interpolator.keyFrames()){
+    points.add(frame.position());
+  }
+  setPoints(points);
+ 
   text((immediate?"Modo: Inmediato  ":"Modo: Retenido  ")+(representation?"  Vertex-Vertex  ":"  Face-Vertex  ")+("  FPS: "+frameRate) + ("  FrameCount: "+frameCount), 150, 35);
+  
+  switch(curveMode){
+    case 0: 
+      break;
+    case 1: 
+      hermite();
+      text("Hermite", 50, 50);
+      break;
+    case 2:
+      bezier(3);
+      text("Bezier cúbico", 50, 50);
+      break;
+    case 3:
+      bezier(7);
+      text("Bezier grado 7", 50, 50);
+      break;
+  }
 }
 
 void walls() {
@@ -160,6 +196,151 @@ void mouseWheel(MouseEvent event) {
   scene.scale(event.getCount() * 20);
 }
 
+// Curvas 
+
+public void setPoints(ArrayList<Vector> points){
+  stroke(213,11,11);
+  this.points = points;
+}
+  
+float bez3(float u, int k){
+  if(k == 0){
+    return (float) Math.pow( (1 - u), 3);
+  }
+  if(k == 1){
+    return (float) (3 * u * Math.pow( (1 - u), 2) );
+  }
+  if(k == 2){
+    return  (float) (3 * Math.pow(u, 2) * (1 - u) );
+  }
+  if(k == 3){
+    return (float) Math.pow( u, 3);
+  } 
+  return 0;
+}
+
+float bez7(float u, int k){
+  if(k == 0){
+    return (float) Math.pow( (1 - u), 7);
+  }
+  if(k == 1){
+    return (float) (7 * u * Math.pow( (1 - u), 6) );
+  }
+  if(k == 2){
+    return  (float) (21 * Math.pow(u, 2) * Math.pow( (1 - u), 5) );
+  }
+  if(k == 3){
+    return  (float) (35 * Math.pow(u, 3) * Math.pow( (1 - u), 4) );
+  }
+  if(k == 4){
+    return  (float) (35 * Math.pow(u, 4) * Math.pow( (1 - u), 3) );
+  }
+  if(k == 5){
+    return  (float) (21 * Math.pow(u, 5) * Math.pow( (1 - u), 2) );
+  }
+  if(k == 6){
+    return  (float) (7 * Math.pow(u, 6) * (1 - u) );
+  }
+  if(k == 7){
+    return  (float) (Math.pow(u, 7) );
+  }
+  return 0;
+}
+
+void bezier(int grade){
+  if( grade == 3){
+    for (float u = 0; u < 1; u = u + 0.01){
+        float x = points.get(0).x() * bez3(u, 0) +
+                   points.get(1).x() * bez3(u, 1)   + 
+                   points.get(2).x() * bez3(u, 2)  + 
+                   points.get(3).x() * bez3(u, 3);
+                   
+        float y = points.get(0).y() * bez3(u, 0) +
+                   points.get(1).y() * bez3(u, 1)   + 
+                   points.get(2).y() * bez3(u, 2)  + 
+                   points.get(3).y() * bez3(u, 3);
+                   
+        float z = points.get(0).z() * bez3(u, 0) +
+                   points.get(1).z() * bez3(u, 1)   + 
+                   points.get(2).z() * bez3(u, 2)  + 
+                   points.get(3).z() * bez3(u, 3);
+        
+        strokeWeight(3);
+        stroke(255,255,255);
+        point(x, y, z);
+    }
+  }else{
+    for (float u = 0; u < 1; u = u + 0.01){
+        float x = points.get(0).x() * bez7(u, 0) +
+                  points.get(1).x() * bez7(u, 1) + 
+                  points.get(2).x() * bez7(u, 2) + 
+                  points.get(3).x() * bez7(u, 3) +
+                  points.get(4).x() * bez7(u, 4) +
+                  points.get(5).x() * bez7(u, 5) +
+                  points.get(6).x() * bez7(u, 6) +
+                  points.get(7).x() * bez7(u, 7);
+                  
+        float y = points.get(0).y() * bez7(u, 0) +
+                  points.get(1).y() * bez7(u, 1) + 
+                  points.get(2).y() * bez7(u, 2) + 
+                  points.get(3).y() * bez7(u, 3) +
+                  points.get(4).y() * bez7(u, 4) +
+                  points.get(5).y() * bez7(u, 5) +
+                  points.get(6).y() * bez7(u, 6) +
+                  points.get(7).y() * bez7(u, 7);
+                  
+        float z = points.get(0).z() * bez7(u, 0) +
+                  points.get(1).z() * bez7(u, 1) + 
+                  points.get(2).z() * bez7(u, 2) + 
+                  points.get(3).z() * bez7(u, 3) +
+                  points.get(4).z() * bez7(u, 4) +
+                  points.get(5).z() * bez7(u, 5) +
+                  points.get(6).z() * bez7(u, 6) +
+                  points.get(7).z() * bez7(u, 7);
+                  
+        
+        strokeWeight(3);
+        stroke(0,255,255);;
+        point(x, y, z);
+    }
+  } 
+}
+
+private Vector tangent_point(int i) {
+  return Vector.multiply( Vector.subtract( points.get(i+1), points.get(i-1) ), 0.5 );
+}
+
+public void hermite(){
+  int n = points.size();
+  Vector aux = null;
+  Vector punto_actual = points.get(0);
+  for (int i=1; i<n-2;i++){
+    Vector P0 = points.get(i);
+    Vector P1 = points.get(i+1);
+  
+    punto_actual = P0;
+    Vector m0= tangent_point(i);
+    Vector m1= tangent_point(i+1); 
+  
+    for(float t=0; t<=1; t+=0.01){  
+      
+      float h00 = 2*pow(t,3)-3*pow(t,2)+1;
+      float h10 = pow(t,3)-2*pow(t,2)+t;
+      float h01 = -2*pow(t,3)+3*pow(t,2);
+      float h11 = pow(t,3)-pow(t,2);
+  
+      Vector aux1 = Vector.add(Vector.multiply(P0, h00),Vector.multiply(m0, h10));
+      Vector aux2 = Vector.add(Vector.multiply(P1, h01),Vector.multiply(m1, h11));
+      aux = Vector.add(aux1, aux2);
+      
+      line(punto_actual.x(),punto_actual.y(),punto_actual.z(),aux.x(),aux.y(),aux.z());
+      punto_actual = aux;
+      }  
+        
+      line(punto_actual.x(),punto_actual.y(),punto_actual.z(),P1.x(),P1.y(),P1.z());
+    }
+}
+
 void keyPressed() {
   switch (key) {
   case 'a':
@@ -197,6 +378,18 @@ void keyPressed() {
       resetEye();
     else if (avatar != null)
       thirdPerson();
+    break;
+   case '0':
+    curveMode = 0;
+    break;
+   case '1':
+    curveMode = 1;
+    break;
+   case '2':
+     curveMode = 2;
+     break;
+   case '3':
+    curveMode = 3;
     break;
   }
 }

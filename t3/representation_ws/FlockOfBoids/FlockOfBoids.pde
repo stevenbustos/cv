@@ -2,23 +2,26 @@
  * Flock of Boids
  * by Jean Pierre Charalambos.
  *
- * This example displays the 2D famous artificial life program "Boids", developed by
- * Craig Reynolds in 1986 and then adapted to Processing in 3D by Matt Wetmore in
+ * This example displays the famous artificial life program "Boids", developed by
+ * Craig Reynolds in 1986 [1] and then adapted to Processing by Matt Wetmore in
  * 2010 (https://www.openprocessing.org/sketch/6910#), in 'third person' eye mode.
- * Boids under the mouse will be colored blue. If you click on a boid it will be
- * selected as the scene avatar for the eye to follow it.
+ * The Boid under the mouse will be colored blue. If you click on a boid it will
+ * be selected as the scene avatar for the eye to follow it.
+ *
+ * 1. Reynolds, C. W. Flocks, Herds and Schools: A Distributed Behavioral Model. 87.
+ * http://www.cs.toronto.edu/~dt/siggraph97-course/cwr87/
+ * 2. Check also this nice presentation about the paper:
+ * https://pdfs.semanticscholar.org/73b1/5c60672971c44ef6304a39af19dc963cd0af.pdf
+ * 3. Google for more...
  *
  * Press ' ' to switch between the different eye modes.
  * Press 'a' to toggle (start/stop) animation.
  * Press 'p' to print the current frame rate.
- * Press 'm' to change the mesh visual mode.
- * Press 't' to shift timers: sequential and parallel.
+ * Press 'm' to change the boid visual mode.
  * Press 'v' to toggle boids' wall skipping.
- * Press 's' to call scene.fitBallInterpolation().
+ * Press 's' to call scene.fit(1).
  */
 
-import frames.input.*;
-import frames.input.event.*;
 import frames.primitives.*;
 import frames.core.*;
 import frames.processing.*;
@@ -40,19 +43,15 @@ int mode;
 
 int initBoidNum = 200; // amount of boids to start the program with
 ArrayList<Boid> flock;
-Node avatar;
+Frame avatar;
 boolean animate = true;
 
 void setup() {
-  size(1000, 800, P3D);
+  size(1500, 1000, P3D);
   scene = new Scene(this);
   scene.setBoundingBox(new Vector(0, 0, 0), new Vector(flockWidth, flockHeight, flockDepth));
   scene.setAnchor(scene.center());
-  Eye eye = new Eye(scene);
-  scene.setEye(eye);
   scene.setFieldOfView(PI / 3);
-  //interactivity defaults to the eye
-  scene.setDefaultGrabber(eye);
   scene.fitBall();
   // create and fill the list of boids
   flock = new ArrayList();
@@ -61,12 +60,12 @@ void setup() {
 }
 
 void draw() {
-  background(0);
+  background(10, 50, 25);
   ambientLight(128, 128, 128);
   directionalLight(255, 255, 255, 0, 1, -100);
   walls();
-  // Calls Node.visit() on all scene nodes.
   scene.traverse();
+  
   pushStyle();
   scene.beginScreenCoordinates();
   text((immediate?"Modo: Inmediato  ":"Modo: Retenido  ")+(representation?"  Vertex-Vertex  ":"  Face-Vertex  ")+("  FPS: "+frameRate) + ("  FrameCount: "+frameCount), 150, 35);

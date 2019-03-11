@@ -28,17 +28,23 @@ Complete la tabla:
 ## Informe
 
 Librerias usadas: [Ketai](http://ketai.org)
+
 Modo usado: [Android Mode](android.processing.org)
 
 Basado en el juego [3DSpaceShooting](www.openprocessing.org/sketch/21754) se cambio para poder ser usado en android.
 
 Los controles pasan de ser movimiento de acuerdo al movimiento del mouse a usarse movimiento usando el acelerometro del
 celular, la aceleración y el disparo se logran tocando la pantalla del dispositivo, para ello se uso la libreria Ketai y el
-manejo de los sensores del celular.
+manejo de los sensores del dispositivo.
 
-![Inicio del Juego](gameStart.jpeg)
+### Inicio del juego
+![Inicio del Juego](AndroidSpaceShooting/images/gameStart.jpeg)
+
+### Aceleración
 ![Aceleración](AndroidSpaceShooting/images/acceleration.jpeg)
-![Game Over](gameOver.jpeg)
+
+### Game Over
+![Game Over](AndroidSpaceShooting/images/gameOver.jpeg)
 
 ## Entrega
 

@@ -1,10 +1,10 @@
 // SpaceShooting Sample / Written by n_ryota / http://cafe.eyln.com
 // If 10 fighters shot down all you did win.
-// Mouse Move ... Rotate
-// Mouse Left Click... Shot
-// Mouse Right Click ... Accel
-// SPACE KEY ... Accel
-
+//-----------------------------------------
+//Acelerometro
+import ketai.sensors.*;
+KetaiSensor sensor;
+float accelerometerX, accelerometerY, accelerometerZ;
 //------------------------------------------
 int PLAYER = 0, ENEMY = 1, EFFECT = 2;
 Player player = new Player(0, 0, 100, 10);
@@ -13,7 +13,103 @@ ArrayList bulletList = new ArrayList();
 ArrayList effectList = new ArrayList();
 float cameraShake = 0.0;
 int clearMillis = 0;
+//------------------------------------------
+void setup() {
+  sensor = new KetaiSensor(this);
+  sensor.start();
+  orientation(LANDSCAPE);
+  size(2160, 1080, P3D);
+  textAlign(CENTER, CENTER);
+  textSize(36);
+  fighterList.add(player);
+  for(int i=0; i<10; i++) {
+    fighterList.add(new Enemy(random(-2000, 2000), random(-2000, 2000), random(-5000, -40000), 150));
+  }
+}
+//------------------------------------------
+void draw(){
+  background(0);
+  
+  setLights();
+  setPlayerCamera();
+  drawStars();
 
+  for (int i=0;i<fighterList.size();i++) {
+    Fighter chara = (Fighter) fighterList.get(i);
+    chara.draw();
+  }
+  noLights();
+  for (int i=0;i<effectList.size();i++) {
+    Effect effect = (Effect) effectList.get(i);
+    effect.draw();
+    if(effect.life<=0) effectList.remove(i--);
+  }
+  for (int i=0;i<bulletList.size();i++) {
+    Bullet bullet = (Bullet) bulletList.get(i);
+    bullet.draw();
+    for (int j=0;j<fighterList.size();j++) {
+      Fighter fighter = (Fighter) fighterList.get(j);
+      if(bullet.isHit(fighter)) {
+        if(fighter==player) cameraShake += bullet.power * 0.5;
+        if(fighter.damage(bullet.power)) {
+          fighterList.remove(j--);
+          addExplosionEffect(fighter);
+          cameraShake += 1.0;
+        }
+        bullet.life = 0;
+        break;
+      }
+    }
+    if(bullet.life<=0) bulletList.remove(i--);
+  }
+  camera();
+  noLights();textSize(20); textAlign(CENTER, TOP);
+  if(player.life>30) fill(0, 255, 0, 128);
+  else fill(255, 0, 0, 128);
+  if(player.life>0) {
+    int enemyNum = fighterList.size()-1;
+    if(enemyNum==0) {
+      fill(255, 128);
+      textSize(40);
+      text("MISSION CLEAR", width/2, height/2 - 40);
+      if(clearMillis==0) clearMillis = millis();
+      text("TIME "+ nf(clearMillis*0.001, 1, 1) + "sec", width/2, height/2 + 30 );
+    } else {
+      text("" + enemyNum + " enemy" + (enemyNum>1 ? "s " : "" ), width/2, 30);
+      textAlign(RIGHT, CENTER);
+      text("life " + nf(player.life, 1, 0), width/3, height-30);
+      rectMode(CORNER);
+      noStroke();
+      rect(20+width/3, height-34, map(player.life, 0, 100, 0, width/3), 5);
+    }
+  } else text("GAME OVER", width/2, height/2);
+
+  input();
+  cameraShake *= 0.95;
+}
+//-----------------------------------------
+void input(){
+  if(accelerometerY<width && accelerometerX<height) {
+    float rotYLevel = -accelerometerY*0.3;
+    float rotXLevel = -accelerometerX*0.3;
+    player.roll(rotXLevel, rotYLevel, 0.0f);
+  }
+  if(player.life>0) {
+    if(mousePressed) player.accel(0.04);
+    else player.vel.mult(0.98);
+  }
+}
+//------------------------------------------
+void mousePressed() {
+  if(player.life>0 && mousePressed) player.shoot(30, 1);
+}
+//------------------------------------------
+void onAccelerometerEvent(float x, float y, float z)
+{
+  accelerometerX = x;
+  accelerometerY = y;
+  accelerometerZ = z;
+}
 //------------------------------------------
 class Chara {
   PMatrix3D matrix = new PMatrix3D();
@@ -140,100 +236,7 @@ class Effect extends Chara  {
     sphereDetail(7); sphere(radius);
   }
 }
-
-//------------------------------------------
-void setup() {
-  size(640, 480, P3D);
-  fighterList.add(player);
-  for(int i=0; i<10; i++) {
-    fighterList.add(new Enemy(random(-2000, 2000), random(-2000, 2000), random(-5000, -40000), 150));
-  }
-}
-
-//------------------------------------------
-void draw(){
-  background(0);
-
-  setLights();
-  setPlayerCamera();
-  drawStars();
-
-  for (int i=0;i<fighterList.size();i++) {
-    Fighter chara = (Fighter) fighterList.get(i);
-    chara.draw();
-  }
-
-  noLights();
-  for (int i=0;i<effectList.size();i++) {
-    Effect effect = (Effect) effectList.get(i);
-    effect.draw();
-    if(effect.life<=0) effectList.remove(i--);
-  }
-
-  for (int i=0;i<bulletList.size();i++) {
-    Bullet bullet = (Bullet) bulletList.get(i);
-    bullet.draw();
-    for (int j=0;j<fighterList.size();j++) {
-      Fighter fighter = (Fighter) fighterList.get(j);
-      if(bullet.isHit(fighter)) {
-        if(fighter==player) cameraShake += bullet.power * 0.5;
-        if(fighter.damage(bullet.power)) {
-          fighterList.remove(j--);
-          addExplosionEffect(fighter);
-          cameraShake += 1.0;
-        }
-        bullet.life = 0;
-        break;
-      }
-    }
-    if(bullet.life<=0) bulletList.remove(i--);
-  }
-
-  camera();
-  noLights();textSize(20); textAlign(CENTER, TOP);
-  if(player.life>30) fill(0, 255, 0, 128);
-  else fill(255, 0, 0, 128);
-  if(player.life>0) {
-    int enemyNum = fighterList.size()-1;
-    if(enemyNum==0) {
-      fill(255, 128);
-      textSize(40);
-      text("MISSION CLEAR", width/2, height/2 - 40);
-      if(clearMillis==0) clearMillis = millis();
-      text("TIME "+ nf(clearMillis*0.001, 1, 1) + "sec", width/2, height/2 + 30 );
-    } else {
-      text("" + enemyNum + " enemy" + (enemyNum>1 ? "s " : "" ), width/2, 30);
-      textAlign(RIGHT, CENTER);
-      text("life " + nf(player.life, 1, 0), width/3, height-30);
-      rectMode(CORNER);
-      noStroke();
-      rect(20+width/3, height-34, map(player.life, 0, 100, 0, width/3), 5);
-    }
-  } else text("GAME OVER", width/2, height/2);
-
-  input();
-  cameraShake *= 0.95;
-}
-
-//------------------------------------------
-void input(){
-  if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height) {
-    float rotYLevel = map(mouseX, 0, width, -1, 1);
-    float rotXLevel = map(mouseY, 0, height, -1, 1);
-    player.roll(rotXLevel * abs(rotXLevel) * 3.0, -rotYLevel * abs(rotYLevel) * 3.0, 0.0f);
-  }
-  if(player.life>0) {
-    if((keyPressed && key==' ') || (mousePressed && mouseButton==RIGHT)) player.accel(0.04);
-    else player.vel.mult(0.98);
-  }
-}
-
-//------------------------------------------
-void mousePressed() {
-  if(player.life>0 && mouseButton==LEFT) player.shoot(30, 1);
-}
-
-//------------------------------------------
+// -------------------------------------
 void addExplosionEffect(Chara chara) {
   for(int i=0; i<3; i++) {
     Effect effect = new Effect(chara.pos.x, chara.pos.y, chara.pos.z, chara.radius);

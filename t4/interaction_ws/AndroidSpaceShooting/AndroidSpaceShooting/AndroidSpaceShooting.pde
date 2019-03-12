@@ -33,7 +33,7 @@ void draw(){
   setLights();
   setPlayerCamera();
   drawStars();
-
+  
   for (int i=0;i<fighterList.size();i++) {
     Fighter chara = (Fighter) fighterList.get(i);
     chara.draw();
@@ -76,6 +76,7 @@ void draw(){
       text("TIME "+ nf(clearMillis*0.001, 1, 1) + "sec", width/2, height/2 + 30 );
     } else {
       text("" + enemyNum + " enemy" + (enemyNum>1 ? "s " : "" ), width/2, 30);
+      //text("Pos: "+player.pos.x+"", width/2, 30);
       textAlign(RIGHT, CENTER);
       text("life " + nf(player.life, 1, 0), width/3, height-30);
       rectMode(CORNER);
@@ -202,13 +203,14 @@ class Enemy extends Fighter {
   }
   void drawShape() {
     fill(200, 200, 200);
-    box(radius*1.5, radius*0.1, radius);
+      
+    sphere(radius*0.6);
+    //box(radius*1.5, radius*0.1, radius);
     rotateX(radians(45));
-    box(radius*0.8, radius*0.7, radius);
+    //box(radius*0.8, radius*0.7, radius);
   }
 }
 
-//------------------------------------------
 class Bullet extends Chara  {
   int power;
   Bullet(float _x, float _y, float _z, float _radius, int _group, int _power) {
@@ -258,9 +260,9 @@ void setPlayerCamera() {
 //------------------------------------------
 void setLights() {
   ambientLight(50, 50, 70); 
-  directionalLight(255, 255, 255, 0, 1, 0); 
+  pointLight(255, 0, 0, 0, 1, 0); 
+  directionalLight(255, 255, 255, player.pos.x, player.pos.y, player.pos.z);
 }
-
 //------------------------------------------
 float modulo(float a, float b) {
   return a - floor(a / b) * b;
